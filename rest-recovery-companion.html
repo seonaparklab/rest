@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rest-recovery-companion</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=boska@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #f3f0ec; --color-border: #d4d1ca;
+      --color-text: #28251d; --color-text-muted: #6f6c66; --color-text-faint: #9f9a92; --color-text-inverse: #f9f8f4;
+      --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-primary-highlight: #cedcd8; --color-warning: #964219; --color-success: #437a22;
+      --radius-sm: 0.5rem; --radius-md: 0.75rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(40,37,29,.06); --shadow-md: 0 8px 24px rgba(40,37,29,.08); --shadow-lg: 0 18px 48px rgba(40,37,29,.12);
+      --font-display: 'Boska', Georgia, serif; --font-body: 'Satoshi', Inter, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #1d1c1a; --color-border: #393836;
+      --color-text: #cdccca; --color-text-muted: #aaa7a2; --color-text-faint: #7b7772; --color-text-inverse: #2b2a28;
+      --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-highlight: #313b3b; --color-warning: #bb653b; --color-success: #6daa45;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.2); --shadow-md: 0 8px 24px rgba(0,0,0,.28); --shadow-lg: 0 18px 48px rgba(0,0,0,.36);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin:0; font-family: var(--font-body); font-size: var(--text-base); line-height:1.6; color:var(--color-text); background:var(--color-bg); }
+    h1,h2,h3,p { margin:0; }
+    button, input, textarea, a { font: inherit; }
+    a { color: inherit; }
+    .app { max-width: 1100px; margin: 0 auto; padding: var(--space-4); padding-bottom: 7rem; }
+    .skip-link { position:absolute; left:-9999px; }
+    .skip-link:focus { left:1rem; top:1rem; background:var(--color-surface); padding:.5rem .75rem; border-radius:var(--radius-sm); z-index:1000; }
+    header.hero { padding: var(--space-6) 0 var(--space-4); display:grid; gap: var(--space-4); }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:var(--space-3); }
+    .brand { display:flex; align-items:center; gap:.75rem; }
+    .logo { width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, var(--color-primary-highlight), transparent); display:grid; place-items:center; border:1px solid rgba(40,37,29,.08); }
+    .logo svg { width:24px; height:24px; }
+    .theme-toggle, .sos-button, .chip, .nav-btn, .action-btn, .small-btn { border:none; border-radius:var(--radius-full); cursor:pointer; min-height:44px; }
+    .theme-toggle { width:44px; background:var(--color-surface); color:var(--color-text); box-shadow: var(--shadow-sm); border:1px solid rgba(40,37,29,.08); }
+    .eyebrow { font-size:var(--text-sm); color:var(--color-text-muted); }
+    .hero-card { background:linear-gradient(180deg, var(--color-surface), var(--color-surface-offset)); border:1px solid rgba(40,37,29,.08); border-radius:var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-md); display:grid; gap:var(--space-4); }
+    .hero-card h1 { font-family:var(--font-display); font-size:var(--text-2xl); line-height:1.05; letter-spacing:-.02em; max-width:12ch; }
+    .hero-card p { max-width:58ch; color:var(--color-text-muted); }
+    .status-grid, .recovery-grid, .content-grid { display:grid; gap:var(--space-4); }
+    .status-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .mood-btn { background:var(--color-surface-2); border:1px solid rgba(40,37,29,.08); border-radius:var(--radius-lg); padding: var(--space-4); min-height:120px; text-align:left; cursor:pointer; display:grid; gap:.4rem; }
+    .mood-btn:hover, .nav-btn:hover, .action-btn:hover, .small-btn:hover, .theme-toggle:hover { background:var(--color-surface-offset); }
+    .mood-btn.active { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(1,105,111,.12); }
+    .emoji { font-size:1.6rem; }
+    .section { padding-top: var(--space-8); display:grid; gap:var(--space-4); }
+    .section-title { display:flex; justify-content:space-between; align-items:end; gap:var(--space-4); }
+    .section-title h2 { font-family: var(--font-display); font-size: var(--text-xl); }
+    .subtle { color: var(--color-text-muted); }
+    .card { background:var(--color-surface); border:1px solid rgba(40,37,29,.08); border-radius:var(--radius-xl); padding:var(--space-5); box-shadow: var(--shadow-sm); }
+    .recovery-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .task-card { display:grid; gap:var(--space-3); align-content:start; }
+    .bullet { color: var(--color-primary); font-weight:700; }
+    .action-btn { background: var(--color-primary); color: var(--color-text-inverse); padding: 0.85rem 1rem; }
+    .small-btn { background: var(--color-surface-offset); padding: 0.75rem 1rem; color: var(--color-text); }
+    .content-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .resource-card { display:grid; gap:var(--space-3); }
+    .resource-meta { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .chip { background:var(--color-primary-highlight); color:var(--color-primary); padding:.5rem .85rem; min-height:auto; }
+    .prompt-list { display:grid; gap:.65rem; padding-left: 1.1rem; }
+    .prompt-list li { max-width:60ch; }
+    .journal-box { display:grid; gap:var(--space-4); }
+    .journal-form { display:grid; gap:var(--space-3); }
+    textarea { width:100%; min-height:110px; resize:vertical; border-radius:var(--radius-lg); border:1px solid rgba(40,37,29,.12); background:var(--color-surface-2); color:var(--color-text); padding:1rem; }
+    .log-list { display:grid; gap:var(--space-3); }
+    .log-item { padding:var(--space-4); border-radius:var(--radius-lg); background:var(--color-surface-2); border:1px solid rgba(40,37,29,.08); }
+    .bottom-nav { position:fixed; left:50%; bottom:1rem; transform:translateX(-50%); width:min(94%, 700px); background:rgba(249,248,245,.88); backdrop-filter: blur(14px); border:1px solid rgba(40,37,29,.08); box-shadow: var(--shadow-lg); border-radius: 999px; display:grid; grid-template-columns: repeat(4, 1fr) 64px; gap:.4rem; padding:.4rem; z-index:20; }
+    [data-theme="dark"] .bottom-nav { background:rgba(28,27,25,.88); }
+    .nav-btn { background:transparent; color:var(--color-text); padding:.75rem .5rem; display:grid; place-items:center; text-align:center; }
+    .nav-btn span { font-size:var(--text-xs); }
+    .sos-button { background: var(--color-warning); color:#fff; font-weight:700; }
+    .recommendation { display:grid; gap:var(--space-3); }
+    .quote-box { border-left: 3px solid var(--color-primary); padding-left: 1rem; color: var(--color-text-muted); }
+    .mini { font-size: var(--text-sm); color: var(--color-text-muted); }
+    @media (max-width: 720px) {
+      .hero-card h1 { max-width: 9ch; }
+      .bottom-nav { grid-template-columns: repeat(4, 1fr) 58px; }
+      .nav-btn { min-height:56px; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">본문으로 건너뛰기</a>
+  <div class="app">
+    <header class="hero">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-label="Rest mark">
+              <path d="M12 3c2.3 2.8 3.6 5 3.6 7.1A3.6 3.6 0 0 1 12 13.7a3.6 3.6 0 0 1-3.6-3.6C8.4 8 9.7 5.8 12 3Z"/>
+              <path d="M6 16.5c1.7 1.8 3.6 2.7 6 2.7s4.3-.9 6-2.7"/>
+            </svg>
+          </div>
+          <div>
+            <div class="eyebrow">회복을 위한 작은 홈페이지</div>
+            <strong>Rest Companion</strong>
+          </div>
+        </div>
+        <button class="theme-toggle" data-theme-toggle aria-label="테마 전환">☾</button>
+      </div>
+      <div class="hero-card" id="home">
+        <div class="eyebrow">열면 이미 절반은 한 거예요.</div>
+        <h1>지금의 나를 미워하지 않으면서, 아주 작게 회복하기.</h1>
+        <p>이 페이지는 생산성 앱이 아니라 <strong>회복용 인터페이스</strong>예요. 피곤함, 몸 상태, 마음 상태를 가볍게 고르고, 읽을거리나 들을거리, 그리고 당장 해볼 수 있는 아주 작은 행동을 친절하게 받을 수 있게 만들었어요.</p>
+        <div class="recommendation card" id="gentleRecommendation">
+          <strong>오늘의 한마디</strong>
+          <div id="gentleMessage">지금 특별히 잘해야 하는 건 없어요. 아래에서 가장 가까운 상태 하나만 골라보세요.</div>
+        </div>
+        <div class="status-grid" id="moodGrid"></div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section" id="ideas">
+        <div class="section-title">
+          <div>
+            <h2>지금 뭐하지?</h2>
+            <p class="subtle">불렛저널처럼, 체크해도 되고 안 해도 되는 작은 회복 목록.</p>
+          </div>
+        </div>
+        <div class="recovery-grid" id="taskGrid"></div>
+      </section>
+
+      <section class="section" id="readwatch">
+        <div class="section-title">
+          <div>
+            <h2>읽기 · 듣기</h2>
+            <p class="subtle">아이디에이션이 어려울 때를 위해, 생각거리까지 같이 넣어뒀어요.</p>
+          </div>
+        </div>
+        <div class="card">
+          <strong>이럴 때 이런 질문 하나만</strong>
+          <ul class="prompt-list" id="promptList"></ul>
+        </div>
+        <div class="content-grid" id="resourceGrid"></div>
+      </section>
+
+      <section class="section" id="journal">
+        <div class="section-title">
+          <div>
+            <h2>한 줄 로그</h2>
+            <p class="subtle">불렛저널 느낌으로 날짜 + 기분 + 한 줄만 남겨요.</p>
+          </div>
+        </div>
+        <div class="journal-box card">
+          <form class="journal-form" id="journalForm">
+            <label for="journalText"><strong>오늘의 한 줄</strong></label>
+            <textarea id="journalText" placeholder="예: 그냥 사람한테 답장하는 것도 피곤했다. 그래도 따뜻한 차는 마셨다."></textarea>
+            <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+              <button type="submit" class="action-btn">한 줄 저장하기</button>
+              <button type="button" class="small-btn" id="insertPrompt">무슨 말을 써야 할지 모르겠을 때</button>
+            </div>
+          </form>
+          <div>
+            <div class="mini">최근 로그</div>
+            <div class="log-list" id="logList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="빠른 이동">
+    <button class="nav-btn" data-jump="#home">🏠<span>홈</span></button>
+    <button class="nav-btn" data-jump="#ideas">•<span>작게 하기</span></button>
+    <button class="nav-btn" data-jump="#readwatch">📖<span>읽기·듣기</span></button>
+    <button class="nav-btn" data-jump="#journal">✎<span>한 줄</span></button>
+    <button class="sos-button" id="sosButton" aria-label="SOS 도움 받기">SOS</button>
+  </nav>
+
+  <script>
+    const moods = [
+      { id:'drained', emoji:'😮‍💨', title:'너무 피곤해요', desc:'몸도 마음도 꺼진 느낌', message:'오늘은 회복이 우선이에요. 뭔가 해내려는 마음보다 먼저, 에너지가 얼마나 남아있는지 봐도 괜찮아요.', prompts:['지금 내가 제일 먼저 쉬어야 하는 부분은 어디일까?', '오늘 나를 덜 힘들게 만들 10분짜리 행동은 뭐지?', '지금은 해결보다 진정이 먼저일까?'], rec:'눈 감고 10분 타이머 + 물 한 컵'} ,
+      { id:'body', emoji:'🫠', title:'몸이 무거워요', desc:'뻐근하고 축 처짐', message:'몸이 먼저 지쳤을 때는 의욕도 같이 떨어져요. 내 의지가 약해서가 아니라, 몸에서 신호를 보내는 걸 수 있어요.', prompts:['어깨, 허리, 다리 중 어디가 제일 불편하지?', '지금 필요한 건 움직임일까, 눕기일까, 따뜻함일까?', '오늘 몸을 미워하지 않고 할 수 있는 돌봄은 뭐지?'], rec:'스트레칭 3분 + 따뜻한 음료'} ,
+      { id:'foggy', emoji:'😵‍💫', title:'생각이 복잡해요', desc:'머리가 과열된 느낌', message:'생각이 많을수록 더 간단한 입력이 필요해요. 긴 계획 말고, 한 문장이나 한 영상 하나로 생각의 온도를 낮춰봐요.', prompts:['지금 내 머릿속에서 가장 시끄러운 문장은 뭐지?', '그 생각이 사실인지, 피곤해서 커진 건지 구분할 수 있을까?', '지금 판단을 미뤄도 되는 건 뭐지?'], rec:'한 줄 브레인덤프 + 영상 하나 보기'} ,
+      { id:'numb', emoji:'😶', title:'아무것도 하기 싫어요', desc:'무감각하고 멍함', message:'이럴 때는 재미도 생산성도 기준이 너무 높으면 안 돼요. 반응만 조금 생기면 충분해요.', prompts:['완전 좋아하는 건 아니어도 덜 싫은 건 뭐지?', '지금 나를 자극하지 않는 소리는 뭐가 있을까?', '하기 싫음이 100이라면, 5만큼만 움직일 방법은?'], rec:'음악 틀기 + 가장 쉬운 항목 하나'} ,
+      { id:'soft', emoji:'🌱', title:'그래도 조금 해볼 수 있어요', desc:'아주 작게는 가능', message:'좋아요. 그럼 오늘은 회복과 연결을 같이 해봐요. 대단한 루틴 말고, 작지만 기분이 조금 나아지는 선택이면 충분해요.', prompts:['오늘의 나를 3%만 좋게 만드는 건 뭐지?', '감사까지는 아니어도 덜 힘든 건 뭐였지?', '오늘 밤의 나를 위해 지금 해둘 수 있는 한 가지는?'], rec:'책 5페이지 or 산책 10분'}
+    ];
+
+    const tasks = [
+      ['•', '좋아하는 음악 플레이리스트 한 개 틀기', '생산적인 음악 말고, 그냥 덜 외롭게 느껴지는 음악이면 충분해요.'],
+      ['•', '눈 감고 10분 쉬기', '잠이 안 와도 괜찮아요. 몸만 잠깐 눕혀두는 시간이에요.'],
+      ['•', '방 안에서 거슬리는 것 하나만 치우기', '정리정돈이 아니라 시야 스트레스 하나 줄이기예요.'],
+      ['•', '따뜻한 음료 마시기', '카페인이 아니어도 돼요. 몸이 안전하다고 느끼는 감각을 먼저 줘요.'],
+      ['•', '스트레칭 3분', '어깨, 목, 고관절만 가볍게. 운동이 아니라 풀어주기예요.'],
+      ['•', '폰 사진 10장 넘겨보기', '예전의 나를 잠깐 만나면 기분이 덜 고립될 수 있어요.'],
+      ['•', '논문 말고 다른 글 5분 읽기', '소설, 에세이, 인터뷰 다 괜찮아요.'],
+      ['•', '지금 기분을 한 줄로 욕처럼 써보기', '잘 쓰는 건 중요하지 않아요. 그냥 빼내기면 돼요.'],
+      ['•', '창문 열고 바깥 공기 느끼기', '생각보다 환경 바꾸기가 도움이 될 때가 많아요.'],
+      ['•', '내일의 나를 위해 아주 쉬운 것 하나 남기기', '예: 물 채워두기, 옷 꺼내두기, 메모 한 줄 남기기.']
+    ];
+
+    const resources = [
+      {cat:'피곤함', type:'Podcast', lang:'한국어', title:'뇌부자들', desc:'정신건강과 감정, 일상 스트레스를 비교적 편하게 풀어주는 국내 팟캐스트. “내가 왜 이러지?”를 덜 무섭게 느끼게 해줄 수 있어요.', url:'https://podcasts.apple.com/us/channel/%EB%87%8C%EB%B6%80%EC%9E%90%EB%93%A4/id6442479595?l=ko'},
+      {cat:'번아웃', type:'YouTube', lang:'영어', title:'These Are the People Who Burn Out Easily', desc:'번아웃 패턴을 가볍게 짚는 영어 영상. 길지 않게 “아, 이게 내 잘못만은 아니구나” 느끼는 데 좋아요.', url:'https://www.youtube.com/watch?v=8r91O3LgDYE'},
+      {cat:'감정', type:'YouTube', lang:'영어', title:'영어로 감정 말하기', desc:'감정을 정교하게 말할 표현이 없을 때 보기 좋아요. 막연한 기분을 단어로 바꾸는 데 도움이 돼요.', url:'https://www.youtube.com/watch?v=BSwRT0tvSVU'},
+      {cat:'생각거리', type:'읽기', lang:'한국어', title:'감사해요 100가지', desc:'감사 일기 아이디어가 전혀 안 떠오를 때 참고할 수 있는 긴 예시 목록. 그대로 따라 써도 부담이 덜해요.', url:'https://blog.naver.com/feeling_card/223332272178'},
+      {cat:'통근/이동', type:'읽기', lang:'한국어', title:'이동 중 듣기 좋은 심리상담 채널 추천', desc:'팟캐스트나 유튜브를 무엇부터 골라야 할지 모를 때, 채널 큐레이션 글로 쓰기 좋아요.', url:'https://mindthos.com/blog/30-minute-commute-counseling-channel-recommendation'}
+    ];
+
+    const defaultPrompts = [
+      '감사한 걸 억지로 찾기 어렵다면, 그냥 “오늘 덜 나빴던 것” 하나만 떠올려보자.',
+      '내 몸이 지금 가장 원하는 건 휴식, 물, 음식, 움직임 중 무엇일까?',
+      '지금 내 머릿속 문장을 한 줄로 적으면 뭐라고 쓸 수 있을까?',
+      '지금 해결하지 않아도 되는 문제는 무엇일까?',
+      '오늘의 나에게 너무 큰 기대를 걸고 있지는 않을까?'
+    ];
+
+    const moodGrid = document.getElementById('moodGrid');
+    const taskGrid = document.getElementById('taskGrid');
+    const resourceGrid = document.getElementById('resourceGrid');
+    const promptList = document.getElementById('promptList');
+    const gentleMessage = document.getElementById('gentleMessage');
+    const logList = document.getElementById('logList');
+    const journalForm = document.getElementById('journalForm');
+    const journalText = document.getElementById('journalText');
+    const insertPrompt = document.getElementById('insertPrompt');
+
+    let selectedMood = null;
+    let logs = [
+      {date: new Date().toLocaleDateString('ko-KR'), emoji:'🌙', text:'오늘은 완전히 회복되진 않아도, 나를 덜 몰아붙이는 방향으로 가보자.'}
+    ];
+
+    function renderMoods() {
+      moodGrid.innerHTML = '';
+      moods.forEach(mood => {
+        const btn = document.createElement('button');
+        btn.className = 'mood-btn' + (selectedMood === mood.id ? ' active' : '');
+        btn.innerHTML = `<div class="emoji">${mood.emoji}</div><strong>${mood.title}</strong><div class="mini">${mood.desc}</div>`;
+        btn.addEventListener('click', () => {
+          selectedMood = mood.id;
+          gentleMessage.innerHTML = `<strong>${mood.emoji} ${mood.title}</strong><br>${mood.message}<br><br><span class="quote-box">오늘의 아주 작은 제안: ${mood.rec}</span>`;
+          renderMoods();
+          renderPrompts(mood.prompts);
+          journalText.value = `• 지금 상태: ${mood.title}\n• 한 줄: `;
+        });
+        moodGrid.appendChild(btn);
+      });
+    }
+
+    function renderTasks() {
+      taskGrid.innerHTML = '';
+      tasks.forEach(([bullet, title, desc], i) => {
+        const card = document.createElement('article');
+        card.className = 'card task-card';
+        card.innerHTML = `<div class="bullet">${bullet}</div><h3>${title}</h3><p class="subtle">${desc}</p><button class="small-btn">해봤어요</button>`;
+        card.querySelector('button').addEventListener('click', e => {
+          e.target.textContent = '좋아요, 이 정도면 충분해요';
+          e.target.disabled = true;
+        });
+        taskGrid.appendChild(card);
+      });
+    }
+
+    function renderResources() {
+      resourceGrid.innerHTML = '';
+      resources.forEach(r => {
+        const card = document.createElement('article');
+        card.className = 'card resource-card';
+        card.innerHTML = `
+          <div class="resource-meta">
+            <span class="chip">${r.cat}</span>
+            <span class="chip">${r.type}</span>
+            <span class="chip">${r.lang}</span>
+          </div>
+          <h3>${r.title}</h3>
+          <p class="subtle">${r.desc}</p>
+          <a class="action-btn" href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:inline-grid; place-items:center; text-decoration:none;">보러 가기</a>
+        `;
+        resourceGrid.appendChild(card);
+      });
+    }
+
+    function renderPrompts(list = defaultPrompts) {
+      promptList.innerHTML = '';
+      list.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        promptList.appendChild(li);
+      });
+    }
+
+    function renderLogs() {
+      logList.innerHTML = '';
+      logs.slice().reverse().forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `<div class="mini">${log.date}</div><div style="margin-top:.35rem;"><strong>${log.emoji}</strong> ${log.text}</div>`;
+        logList.appendChild(item);
+      });
+    }
+
+    journalForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = journalText.value.trim();
+      if (!text) return;
+      const mood = moods.find(m => m.id === selectedMood);
+      logs.push({date: new Date().toLocaleDateString('ko-KR'), emoji: mood ? mood.emoji : '•', text});
+      journalText.value = '';
+      renderLogs();
+    });
+
+    insertPrompt.addEventListener('click', () => {
+      const pool = selectedMood ? moods.find(m => m.id === selectedMood).prompts : defaultPrompts;
+      const random = pool[Math.floor(Math.random() * pool.length)];
+      journalText.value = `• 생각해볼 거리: ${random}\n• 한 줄: `;
+      journalText.focus();
+    });
+
+    document.querySelectorAll('[data-jump]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector(btn.dataset.jump).scrollIntoView({behavior:'smooth', block:'start'});
+      });
+    });
+
+    document.getElementById('sosButton').addEventListener('click', () => {
+      const pool = selectedMood ? tasks.map(t => t[1]) : ['눈 감고 10분 쉬기', '물 한 컵 마시기', '음악 하나 틀기', '창문 열기'];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      gentleMessage.innerHTML = `<strong>🆘 지금은 이것 하나만</strong><br>${pick}<br><br>다음은 나중에 생각해도 돼요.`;
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+    let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.textContent = theme === 'dark' ? '☀︎' : '☾';
+    themeToggle.addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀︎' : '☾';
+    });
+
+    renderMoods();
+    renderTasks();
+    renderResources();
+    renderPrompts();
+    renderLogs();
+  </script>
+</body>
+</html>
